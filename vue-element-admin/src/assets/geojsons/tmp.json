@@ -1,0 +1,36 @@
+{
+    "type": "FeatureCollection",
+    "name": "entities",
+    "features": [
+        { 
+            "type": "Feature", 
+            "id": 0, 
+            "properties": { 
+                "Layer": "WIVI-英文", 
+                "SubClasses": "AcDbEntity:AcDbText:AcDbText", 
+                "EntityHandle": "2305", 
+                "Text": "128" 
+            }, 
+            "geometry": { 
+                "type": "Point",
+                "coordinates": [ 13409.809596918890747, 19326.130660730141244, -0.000008334943357 ] 
+            } 
+        },
+        { 
+            "type": "Feature",
+            "id": 3, 
+            "properties": { 
+                "Layer": "A-Wall", 
+                "SubClasses": "AcDbEntity:AcDbLine", 
+                "EntityHandle": "23DD" 
+            }, 
+            "geometry": { 
+                "type": "LineString", 
+                "coordinates": [ 
+                    [ 16177.505874076559849, 9312.506898139154146, 0.000001514989701 ], 
+                    [ 16177.505874076559849, 9412.506898139154146, 0.000001514989701 ] 
+                ] 
+            } 
+        }
+    ]
+}
