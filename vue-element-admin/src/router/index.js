@@ -77,13 +77,13 @@ export const constantRoutes = [
     component: () => import('@/views/error-page/401'),
     hidden: true
   },
-  {
-    path: '/result/:user_id/:task_id',
-    // component: () => import('@/views/result/index'),
-    component: ResultComponent,
-    props: true,
-    hidden: true
-  },
+  // {
+  //   path: '/result/:user_id/:task_id',
+  //   // component: () => import('@/views/result/index'),
+  //   component: ResultComponent,
+  //   props: true,
+  //   hidden: true
+  // },
   {
     path: '/',
     component: Layout,
@@ -104,12 +104,12 @@ export const constantRoutes = [
     name: 'a',
     meta: { title: '任务管理'},
     children: [
-      // {
-      //   path: 'test',
-      //   component: () => import('@/views/task/test'), 
-      //   name: 'test',
-      //   meta: { title: '测试' }
-      // },
+      {
+        path: 'test',
+        component: () => import('@/views/task/test'), 
+        name: 'test',
+        meta: { title: '测试' }
+      },
       {
         path: 'create',
         component: () => import('@/views/task/create'), 
@@ -123,13 +123,22 @@ export const constantRoutes = [
         meta: { title: '任务列表' }
       },
       {
-        path: 'result/:user_id/:task_id',
+        path: 'bill/:user_id/:task_id/',
+        component: () => import('@/views/task/bill'),
+        name: 'bill',
+        hidden: true,
+        meta: { title: '任务详情-清单' },
+        props: true,
+        // hidden: true
+      },
+      {
+        path: 'result/:user_id/:task_id/:task_type',
         component: () => import('@/views/task/result'),
         name: 'result',
         hidden: true,
-        meta: { title: '任务详情' },
+        meta: { title: '任务详情-明细' },
         props: true,
-        // hidden: true     // hidden属性含义？
+        hidden: true
       }
     ]
   },

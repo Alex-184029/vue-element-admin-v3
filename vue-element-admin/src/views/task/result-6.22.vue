@@ -131,7 +131,7 @@ import { getServerUrl } from '@/utils'
 import axios from 'axios'
 export default {
   name: 'ResultComponent',
-  props: ['user_id', 'task_id', 'task_type'],
+  props: ['user_id', 'task_id'],
   data() {
     return {
       selectOptions: [],
@@ -170,7 +170,6 @@ export default {
       // src:'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg',
       task_id: null,
       user_id: null,
-      task_type: null,
       dwg_name: null,
       consoleValue: '',
       area_cnt: 0,
@@ -239,16 +238,84 @@ export default {
     taskId() {
       this.task_id = this.$route.params.task_id
       return this.$route.params.task_id
-    },
-    taskType() {
-      this.task_type = this.$route.params.task_type
-      return this.$route.params.task_type
-    },
+    }
   },
   created() { // 初始化函数
+    // console.log('user_id:', this.user_id)
+    // console.log('task_id:', this.task_id)
+    // this.getTaskInfo();
+    // this.initTaskInfo()
+    // this.getTaskInfo3()
     this.doInit()
   },
   methods: {
+
+    getFileName(fileName) {
+      // 查找最后一个"."的位置
+      const dotIndex = fileName.lastIndexOf('.')
+      // 如果没有找到"." 或者 "." 是在第一个位置（这通常意味着文件名本身就是扩展名，比如 ".txt" 文件）
+      if (dotIndex === -1 || dotIndex === 0) {
+        return fileName
+      }
+      // 获取无后缀的文件名
+      const name = fileName.substring(0, dotIndex)
+      return name
+    },
+    initTaskInfo() {
+      console.log('Here is initTaskInfo, task_id:', this.task_id)
+      const arr = this.task_id.split('&&&')
+      if (arr.length !== 2) {
+        console.log('error to parse task_id:', this.task_id)
+        return
+      }
+      this.task_id = arr[0]
+      this.dwg_name = arr[1]
+      this.dwg_name = this.getFileName(this.dwg_name) // 去除后缀
+      console.log('task_id:', this.task_id)
+      console.log('dwg_name:', this.dwg_name)
+      this.task_info = { 'task_name': this.task_id }
+
+      const formData = new FormData()
+      formData.append('dwgname', this.dwg_name)
+      axios.post(getServerUrl() + '/recong_door3', formData).then(response => {
+        const form = response.data
+        console.log('form:', form)
+        if (form['img_base64'] != null) {
+          this.src = 'data:image/jpg;base64,' + form['img_base64'] // 箭头函数不会创建自己的this绑定，不必let that = this
+        } else {
+          console.log('获取结果失败')
+        }
+      }).catch(error => {
+        console.error('There was an error:', error)
+      })
+    },
+   getTaskInfo2() {
+      console.log('Here is getTaskInfo2.')
+      const formData = new FormData()
+      formData.append('task_id', this.task_id)
+      axios.post(getServerUrl() + '/query_task', formData) // 根据task_id查询task信息
+        .then(response => {
+          this.task_info = response.data
+          console.log('drawing name:', this.task_info['drawing_name'])
+
+          const formData1 = new FormData()
+          formData1.append('drawing_name', this.task_info['drawing_name'])
+          // 获取显示图像
+          axios.post(getServerUrl() + '/get-image_door', formData1, { responseType: 'arraybuffer' }).then(response => {
+            // this.src = response.data.image;
+            const blob = new Blob([response.data], { type: 'img_home/png' })
+            this.src = URL.createObjectURL(blob)
+          })
+          // 获取输出结果
+          axios.post(getServerUrl() + '/get-console', formData1).then(response => {
+            this.consoleValue = response.data['console']
+            console.log('consoleValue:', this.consoleValue)
+          })
+        })
+        .catch(error => {
+          console.error('There was an error:', error)
+        })
+    },
     doInit() {
       console.log('Here is doInit.')
       const formData = new FormData()
@@ -256,9 +323,9 @@ export default {
       axios.post(getServerUrl() + '/query_task', formData) // 根据task_id查询task信息
         .then(response => {
           this.task_info = response.data
-          console.log('task info:', this.task_info['drawing_name'])
-          // 是否需要去校验task_type是否在数据库的task_type表中，在的话才能够继续
-          this.recognitionType = this.task_type
+          console.log('task info:', this.task_info['drawing_name'], this.task_info['task_type'])
+          this.getSelectOptions(this.task_info['task_type'])
+          this.recognitionType = this.selectOptions[0]['key']
           this.getTaskInfo3()
         }).catch(error => {
           console.error('Error in get drawing name:', error)
@@ -536,17 +603,6 @@ export default {
       } else {
         return '其它'
       }
-    },
-    getFileName(fileName) {
-      // 查找最后一个"."的位置
-      const dotIndex = fileName.lastIndexOf('.')
-      // 如果没有找到"." 或者 "." 是在第一个位置（这通常意味着文件名本身就是扩展名，比如 ".txt" 文件）
-      if (dotIndex === -1 || dotIndex === 0) {
-        return fileName
-      }
-      // 获取无后缀的文件名
-      const name = fileName.substring(0, dotIndex)
-      return name
     },
     handleWheel2(event) {
       event.preventDefault();

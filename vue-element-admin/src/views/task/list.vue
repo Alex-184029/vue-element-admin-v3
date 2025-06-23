@@ -63,10 +63,10 @@ import { getServerUrl } from '@/utils'
 import Pagination from '@/components/Pagination'
 import axios from 'axios'
 
-import pic1 from '@/assets/pics/1.png'
-import pic2 from '@/assets/pics/2.png'
-import pic3 from '@/assets/pics/3.png'
-import pic4 from '@/assets/pics/4.png'
+// import pic1 from '@/assets/pics/1.png'
+// import pic2 from '@/assets/pics/2.png'
+// import pic3 from '@/assets/pics/3.png'
+// import pic4 from '@/assets/pics/4.png'
 
 export default {
   name: 'TaskListComponent',
@@ -83,10 +83,6 @@ export default {
   },
   data() {
     return {
-      src1: pic1,
-      src2: pic2,
-      src3: pic3,
-      src4: pic4,
       task_info: {
         task_name: '图纸plan_2的门识别',
         task_id: '0553b76d-c21d-4d02-a273-fb713dda3459',
@@ -172,8 +168,8 @@ export default {
           console.log('task status:', this.task_info['status'])
           let status = this.task_info['status']
           if (status == 'sucess') {
-            // this.$router.push({path: `/result/${1}/${row.task_id}`})
-            this.$router.push({path: `/task/result/${1}/${row.task_id}`})
+            // this.$router.push({path: `/task/result/${1}/${row.task_id}`})
+            this.$router.push({path: `/task/bill/${1}/${row.task_id}`})
           } else if (status == 'fail') {
             this.$notify({
               title: 'Error',
