@@ -1,20 +1,17 @@
 <template>
   <div class="app-container" style="padding: 0; display: flex;">
-    <div class="left" style="flex: 1; padding: 0;">
+    <div class="left" style="flex: 1; padding: 0; margin-left: 100px;">
       <el-row :gutter="0" style="width: 100%; margin: 0;">
         <!-- 结果列表 -->
         <el-col :span="23" style="padding: 0;">
           <div style="display: flex; align-items: center; padding: 10px;">
             <label>任务名称： </label>
-            <span style="margin-left: 50px; font-weight: bolder;">{{ task_info['task_name'] }}</span>
+            <span style="margin-left: 20px; font-weight: bolder;">{{ task_info['task_name'] }}</span>
           </div>
           <div style="display: flex; align-items: center; padding: 10px;">
-            <label>图纸 xxx 的工程量清单</label>
+            <label>图纸 {{ getFileName(task_info['drawing_name']) }} 的工程量清单</label>
           </div>
-          <!-- excel导出按钮 -->
-           <el-button :loading="downloadLoading" style="margin:0 0 20px 20px;" type="primary" icon="el-icon-document" @click="handleDownload">
-              Export Excel
-            </el-button>
+          
           <!-- 清单表格 -->
           <el-table
             :data="table_data"
@@ -71,6 +68,11 @@
               </template>
             </el-table-column>
           </el-table>
+
+          <!-- excel导出按钮 -->
+          <el-button :loading="downloadLoading" style="margin:20px 0 0 0;" type="primary" icon="el-icon-document" @click="handleDownload">
+              导出Excel格式
+          </el-button>
 
         </el-col>
       </el-row>
@@ -170,6 +172,7 @@ export default {
   },
   data() {
     return {
+      task_info: {},
       user_id: '',
       task_id: '',
       img_src_tmp: img_tmp,
@@ -226,7 +229,7 @@ export default {
       formData1.append('task_id', this.task_info['task_id'])
       formData1.append('drawing_name', this.task_info['drawing_name'])
       // 获取显示图像
-      axios.post(getServerUrl() + '/get-image', formData1, { responseType: 'arraybuffer' }).then(response => {
+      axios.post(getServerUrl() + '/get-image-bill', formData1, { responseType: 'arraybuffer' }).then(response => {
         const blob = new Blob([response.data], { type: 'img_home/png' })
         this.img_src = URL.createObjectURL(blob)
         // 获取输出结果
@@ -295,7 +298,7 @@ export default {
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: '工程量清单导出-' + this.task_name,    // 不需要加后缀
+          filename: '工程量清单导出-' + this.getFileName(this.task_info['drawing_name']),    // 不需要加后缀
           autoWidth: this.autoWidth,
           bookType: this.bookType
         })
@@ -303,8 +306,9 @@ export default {
       })
     },
     handleRowClick(row, column, event) {
-      console.log('row:', row)    // 序号从0开始
-      let major = table_data[row]['major']
+      let major = row['major']
+      // console.log('row:', row)    // 序号从0开始
+      console.log('major:', major)    // 序号从0开始
       let task_type = ''
       if (major === '') {
       } else if (major.includes('房间') || major.includes('区域') || major.includes('户型')) {
@@ -326,7 +330,7 @@ export default {
         })
       }
       if (task_type !== '') {
-        this.$router.push({path: `/task/result/${1}/${row.task_id}/${task_type}`})
+        this.$router.push({path: `/task/result/${1}/${this.task_id}/${task_type}`})
       }
     },
     getFileName(fileName) {

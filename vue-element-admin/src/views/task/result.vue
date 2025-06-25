@@ -1,19 +1,25 @@
 <template>
   <div class="app-container" style="padding: 0; display: flex;">
-    <div class="left" style="flex: 1; padding: 0;">
+    <div class="left" style="flex: 1; padding: 0; margin-left: 50px">
       <el-row :gutter="0" style="width: 100%; margin: 0;">
         <!-- 结果列表 -->
         <el-col :span="23" style="padding: 0;">
           <div style="display: flex; align-items: center; padding: 10px;">
             <label>任务名称： </label>
-            <span style="margin-left: 50px; font-weight: bolder;">{{ task_info['task_name'] }}</span>
+            <span style="margin-left: 25px; font-weight: bolder;">{{ task_info['task_name'] }}</span>
           </div>
+          <div style="display: flex; align-items: center; padding: 10px;">
+            <label>明细类型： </label>
+            <span style="margin-left: 25px; font-weight: normal;">{{ task_type }}</span>
+          </div>
+          <!--
           <div style="display: flex; align-items: center; padding: 10px;">
             <label>图元统计结果：</label>
             <el-select v-model="recognitionType" style="width: 150px; margin-left: 20px;" @change="selectRecogType">
               <el-option v-for="item in selectOptions" :key="item.key" :label="item.label" :value="item.key" />
             </el-select>
           </div>
+          -->
 
           <el-table :data="items" @row-click="handleRowClick" class="custom-table" border fit highlight-current-row>
             <el-table-column
@@ -66,6 +72,10 @@
           </el-table>
         </el-col>
       </el-row>
+      <!-- excel导出按钮 -->
+      <el-button :loading="downloadLoading" style="margin:20px 0 0 0;" type="primary" icon="el-icon-document" @click="handleDownload">
+          导出Excel格式
+      </el-button>
     </div>
     <div class="right" style="flex: 1; padding: 0;">
       <!-- 结果示意图 -->
@@ -172,46 +182,7 @@ export default {
       user_id: null,
       task_type: null,
       dwg_name: null,
-      consoleValue: '',
-      area_cnt: 0,
-      door_cnt: 0,
-      window_cnt: 0,
-      light_cnt: 0,
-      switch_cnt: 0,
-      socket_cnt: 0,
-      howWidth: 8,
-      tableKey: 0,
-      list: null,
-      importanceOptions: [1, 2, 3],
-      calendarTypeOptions,
-      sortOptions: [{ label: 'ID Ascending', key: '+id' }, { label: 'ID Descending', key: '-id' }],
-      statusOptions: ['published', 'draft', 'deleted'],
-      showReviewer: false,
-      temp: {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        type: '',
-        status: 'published'
-      },
-      dialogFormVisible: false,
-      dialogStatus: '',
-      textMap: {
-        update: 'Edit',
-        create: 'Create'
-      },
-      dialogPvVisible: false,
-      pvData: [],
-      rules: {
-        type: [{ required: true, message: 'type is required', trigger: 'change' }],
-        timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        title: [{ required: true, message: 'title is required', trigger: 'blur' }]
-      },
-      downloadLoading: false,
-      task_info: [],
-      result_info: [],
+      task_info: {},
       columns_rect: [
         { key: 'item_order', label: '序号', width: 80, align: 'center' },
         { key: 'item_type_text', label: '类型', width: 100, align: 'center' },
@@ -227,7 +198,8 @@ export default {
         { key: 'area', label: '面积', width: 110, align: 'center' },
         { key: 'perimeter', label: '周长', width: 110, align: 'center' },
       ],
-      columns: []
+      columns: [],
+      downloadLoading: false
     }
   },
   computed: {
@@ -256,7 +228,7 @@ export default {
       axios.post(getServerUrl() + '/query_task', formData) // 根据task_id查询task信息
         .then(response => {
           this.task_info = response.data
-          console.log('task info:', this.task_info['drawing_name'])
+          console.log('task info:', this.task_info['drawing_name'], 'task_type:', this.task_type)
           // 是否需要去校验task_type是否在数据库的task_type表中，在的话才能够继续
           this.recognitionType = this.task_type
           this.getTaskInfo3()
@@ -314,102 +286,6 @@ export default {
       }).catch(error => {
           console.error('Error in get image door:', error)
       })
-    },
-    getTaskInfo30Backup() {
-      console.log('Here is getTaskInfo3, recognitionType:', this.recognitionType)
-      const formData1 = new FormData()
-      formData1.append('drawing_name', this.task_info['drawing_name'])
-      formData1.append('task_type', this.recognitionType)
-      // 获取显示图像
-      axios.post(getServerUrl() + '/get-image', formData1, { responseType: 'arraybuffer' }).then(response => {
-        // this.src = response.data.image;
-        const blob = new Blob([response.data], { type: 'img_home/png' })
-        this.src0 = URL.createObjectURL(blob)
-        // 获取输出结果
-        axios.post(getServerUrl() + '/get-item_list', formData1).then(response => {
-          this.items = response.data['rects']
-          this.box = response.data['box']
-          this.total = response.data['total']
-          console.log('items:', this.items)
-          console.log('box:', this.box)
-          console.log('total:', this.total)
-          this.doMapRange()
-          // this.image.src = this.src0;
-          let w = 1600, h = 1280
-          // this.scale = Math.min(this.image.width * 1.0 / this.canvasWidth, this.image.height * 1.0 / this.canvasHeight)
-          this.scale = Math.min(this.canvasWidth * 1. / w, this.canvasHeight * 1. / h)
-          this.minScale = this.scale / 10.0
-          this.maxScale = this.scale * 10.0
-          console.log('scale:', this.scale, this.minScale, this.maxScale)
-          this.handleShow(null)
-        }).catch(error => {
-          console.error('Error in get item list:', error)
-        })
-      }).catch(error => {
-          console.error('Error in get image door:', error)
-      })
-    },
-    getTaskInfo() {
-      console.log('Here is getTaskInfo.')
-      const formData = new FormData()
-      formData.append('task_id', this.task_id)
-      axios.post(getServerUrl() + '/query_task', formData) // 根据task_id查询task信息
-        .then(response => {
-          this.task_info = response.data
-          console.log('drawing name:', this.task_info['drawing_name'])
-
-          const formData1 = new FormData()
-          formData1.append('drawing_name', this.task_info['drawing_name'])
-          axios.post(getServerUrl() + '/get-image_home', formData1, { responseType: 'arraybuffer' }).then(response => {
-            // this.src = response.data.image;
-            const blob = new Blob([response.data], { type: 'img_home/png' })
-            this.src = URL.createObjectURL(blob)
-          })
-
-          const formData2 = new FormData()
-          formData2.append('drawing_name', this.task_info['drawing_name'])
-          axios.post(getServerUrl() + '/display_result', formData2).then(response => {
-            this.result_info = response.data
-            console.log(this.result_info)
-            this.area_cnt = this.result_info['area_cnt']
-            this.door_cnt = this.result_info['door_cnt']
-            this.window_cnt = this.result_info['window_cnt']
-            this.light_cnt = this.result_info['light_cnt']
-            this.switch_cnt = this.result_info['switch_cnt']
-            this.socket_cnt = this.result_info['socket_cnt']
-            this.tableArr.forEach(item => {
-              if (item.key === '区域') {
-                item.value = this.area_cnt
-              } else if (item.key === '门') {
-                item.value = this.door_cnt
-              } else if (item.key === '窗') {
-                item.value = this.window_cnt
-              } else if (item.key === '灯') {
-                item.value = this.light_cnt
-              } else if (item.key === '开关') {
-                item.value = this.switch_cnt
-              } else if (item.key === '插座') {
-                item.value = this.socket_cnt
-              }
-            })
-          }).catch(error => {
-            console.error('There was an error:', error)
-          })
-        }).catch(error => {
-          console.error('There was an error:', error)
-        })
-    },
-    redirectToList() {
-      this.$router.push(`/list/index`)
-    },
-    handleDelete(row, index) {
-      this.$notify({
-        title: 'Success',
-        message: 'Delete Successfully',
-        type: 'success',
-        duration: 2000
-      })
-      this.list.splice(index, 1)
     },
     handleShow(row) {
       console.log('here is handleShow')
@@ -937,6 +813,38 @@ export default {
         room_text += labels[i]
       }
       return room_text
+    },
+    handleDownload() {
+      this.downloadLoading = true
+      let tHeader = []
+      let filterVal = []
+      for (let i = 0; i < this.columns.length; i++) {
+        tHeader.push(this.columns[i]['label'])
+        filterVal.push(this.columns[i]['key'])
+      }
+      console.log('tHeader:', tHeader)
+      console.log('filterVal:', filterVal)
+      import('@/vendor/Export2Excel').then(excel => {
+        const list = this.items
+        const data = this.formatJson(filterVal, list)
+        excel.export_json_to_excel({
+          header: tHeader,
+          data,
+          filename: '明细导出-' + this.getFileName(this.task_info['drawing_name']) + '-' + this.recognitionType,    // 不需要加后缀
+          autoWidth: this.autoWidth,
+          bookType: this.bookType
+        })
+        this.downloadLoading = false
+      })
+    },
+    formatJson(filterVal, jsonData) {
+      return jsonData.map(v => filterVal.map(j => {
+        if (j === 'timestamp') {
+          return parseTime(v[j])
+        } else {
+          return v[j]
+        }
+      }))
     },
   }
 }
